@@ -104,6 +104,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USB_HOST_Init();
   /* USER CODE BEGIN 2 */
+  void AddEchoAndReverb(int16_t *buffer, uint32_t bufferSize, int16_t *echoBuffer, uint32_t echoBufferSize, float echoGain, float reverbGain);
 
   /* USER CODE END 2 */
 
@@ -169,6 +170,33 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 //new function here
+
+
+
+
+void AddEchoAndReverb(int16_t *buffer, uint32_t bufferSize, int16_t *echoBuffer, uint32_t echoBufferSize, float echoGain, float reverbGain)
+{
+    static uint32_t writeIndex = 0;  // Index d'écriture dans le buffer circulaire
+    uint32_t readIndex;
+
+    for (uint32_t i = 0; i < bufferSize; i++)
+    {
+        // Calcul de l'index de lecture pour obtenir le signal retardé
+        readIndex = (writeIndex + echoBufferSize - (SAMPLE_RATE * 0.2)) % echoBufferSize;
+
+        // Ajout de l'écho (signal retardé) au signal actuel
+        buffer[i] += (int16_t)(echoBuffer[readIndex] * echoGain);
+
+        // Ajout de la réverbération (signal encore plus diffus)
+        buffer[i] += (int16_t)(buffer[i] * reverbGain);
+
+        // Stockage du signal actuel dans le buffer circulaire
+        echoBuffer[writeIndex] = buffer[i];
+
+        // Mise à jour de l'index d'écriture
+        writeIndex = (writeIndex + 1) % echoBufferSize;
+    }
+}
 
 /* USER CODE END 4 */
 
