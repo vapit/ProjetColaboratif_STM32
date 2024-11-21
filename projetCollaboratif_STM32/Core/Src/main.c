@@ -63,8 +63,6 @@ void MX_USB_HOST_Process(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-UART_init();
-I2C_init();
 /* USER CODE END 0 */
 
 /**
