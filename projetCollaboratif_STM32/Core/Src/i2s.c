@@ -21,6 +21,12 @@
 #include "i2s.h"
 
 /* USER CODE BEGIN 0 */
+#include "string.h"
+
+#define BUFFER_SIZE 1024
+uint16_t rxBuffer[BUFFER_SIZE];
+uint16_t txBuffer[BUFFER_SIZE];
+
 
 /* USER CODE END 0 */
 
@@ -159,5 +165,29 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void StartAudioProcessing() {
+    // Démarrer la réception
+    if (HAL_I2S_Receive_DMA(&hi2s3, rxBuffer, BUFFER_SIZE) != HAL_OK) {
+        Error_Handler();
+    }
+
+    // Démarrer la transmission
+    if (HAL_I2S_Transmit_DMA(&hi2s3, txBuffer, BUFFER_SIZE) != HAL_OK) {
+        Error_Handler();
+    }
+}
+void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s) {
+    // Copier ou traiter la première moitié des données
+    memcpy(txBuffer, rxBuffer, BUFFER_SIZE / 2 * sizeof(uint16_t));
+}
+
+void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s) {
+    // Copier ou traiter la deuxième moitié des données
+    memcpy(&txBuffer[BUFFER_SIZE / 2], &rxBuffer[BUFFER_SIZE / 2], BUFFER_SIZE / 2 * sizeof(uint16_t));
+}
+void HAL_I2S_ErrorCallback(I2S_HandleTypeDef *hi2s) {
+    // Réagir en cas d'erreur (redémarrer DMA, enregistrer une erreur, etc.)
+    Error_Handler();
+}
 
 /* USER CODE END 1 */
