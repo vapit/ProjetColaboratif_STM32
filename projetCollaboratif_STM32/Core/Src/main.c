@@ -120,7 +120,6 @@ int main(void)
   I2C_periodic();
   I2S_periodic();
   app_periodic();
-  printf("test\r\n");
 
 
   }
