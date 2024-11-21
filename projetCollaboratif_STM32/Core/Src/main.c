@@ -73,8 +73,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  UART_periodic();
-  I2C_periodic();
+  UART_init();
+  I2C_init();
+  I2S_init();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -116,6 +117,9 @@ I2C_init();
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+    I2S_periodic();
+    I2C_periodic();
+    UART_periodic();
   }
   /* USER CODE END 3 */
 }

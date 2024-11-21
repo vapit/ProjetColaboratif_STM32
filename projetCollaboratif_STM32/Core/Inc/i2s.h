@@ -42,6 +42,8 @@ void MX_I2S3_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
+void I2S_init(void);
+void I2S_periodic(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
