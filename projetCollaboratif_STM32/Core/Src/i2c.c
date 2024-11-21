@@ -194,4 +194,17 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 
 /* USER CODE BEGIN 1 */
 
+void I2C_init(){    //used once before the loop
+
+
+}
+void I2C_periodic(){  //inside the loop
+
+
+}
+
+
+
+
+
 /* USER CODE END 1 */
