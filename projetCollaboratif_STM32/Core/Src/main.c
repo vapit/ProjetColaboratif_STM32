@@ -90,7 +90,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+UART_init();
+I2C_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
