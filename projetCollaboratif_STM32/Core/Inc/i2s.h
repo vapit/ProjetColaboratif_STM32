@@ -41,6 +41,11 @@ extern I2S_HandleTypeDef hi2s3;
 void MX_I2S3_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void I2S_periodic(void);
+void I2S_init(void);
+
+void I2S_init(void);
+void I2S_periodic(void);
 void StartAudioProcessing();
 void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s);
 void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef *hi2s);

@@ -28,6 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -72,8 +73,14 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  UART_periodic();
-  I2C_periodic();
+  UART_init();
+  I2C_init();
+  I2S_init();
+<<<<<<< Updated upstream
+=======
+  app_init();
+  
+>>>>>>> Stashed changes
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,7 +96,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+UART_init();
+I2C_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -111,10 +119,21 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  UART_periodic();
+  I2C_periodic();
+  I2S_periodic();
+  app_periodic();
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+<<<<<<< Updated upstream
+    I2S_periodic();
+    I2C_periodic();
+    UART_periodic();
+=======
+
+>>>>>>> Stashed changes
 
   }
   /* USER CODE END 3 */
