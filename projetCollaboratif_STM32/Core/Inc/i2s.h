@@ -41,6 +41,8 @@ extern I2S_HandleTypeDef hi2s3;
 void MX_I2S3_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void I2S_periodic(void);
+void I2S_init(void);
 
 void I2S_init(void);
 void I2S_periodic(void);

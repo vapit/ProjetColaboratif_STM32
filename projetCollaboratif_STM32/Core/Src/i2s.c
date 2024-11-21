@@ -170,4 +170,11 @@ void I2S_periodic(){  //inside the loop
 
 
 
+void I2S_init(void){
+
+}
+void I2S_periodic(void){
+
+}
+
 /* USER CODE END 1 */

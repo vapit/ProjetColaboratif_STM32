@@ -29,7 +29,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,6 +76,11 @@ int main(void)
   UART_init();
   I2C_init();
   I2S_init();
+<<<<<<< Updated upstream
+=======
+  app_init();
+  
+>>>>>>> Stashed changes
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -113,13 +118,21 @@ I2C_init();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  UART_periodic();
+  I2C_periodic();
+  I2S_periodic();
+  app_periodic();
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+<<<<<<< Updated upstream
     I2S_periodic();
     I2C_periodic();
     UART_periodic();
+=======
+
+>>>>>>> Stashed changes
   }
   /* USER CODE END 3 */
 }
