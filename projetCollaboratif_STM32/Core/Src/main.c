@@ -73,14 +73,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  UART_init();
-  I2C_init();
-  I2S_init();
-<<<<<<< Updated upstream
-=======
-  app_init();
   
->>>>>>> Stashed changes
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,8 +89,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-UART_init();
-I2C_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -111,29 +102,26 @@ I2C_init();
   MX_USB_HOST_Init();
   /* USER CODE BEGIN 2 */
 
-  StartAudioProcessing();
-  printf("Start Audio Processing ok\n\r");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  UART_init();
+  I2C_init();
+  I2S_init();
+  app_init();
   while (1)
   {
-  UART_periodic();
-  I2C_periodic();
-  I2S_periodic();
-  app_periodic();
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
-<<<<<<< Updated upstream
-    I2S_periodic();
-    I2C_periodic();
-    UART_periodic();
-=======
+  UART_periodic();
+  I2C_periodic();
+  I2S_periodic();
+  app_periodic();
+  printf("test\r\n");
 
->>>>>>> Stashed changes
 
   }
   /* USER CODE END 3 */

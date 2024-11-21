@@ -165,18 +165,10 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
 }
 
 /* USER CODE BEGIN 1 */
-void I2S_init(){    //used once before the loop
-
-
-}
-void I2S_periodic(){  //inside the loop
-
-
-}
-
-
 
 void I2S_init(void){
+  
+  //StartAudioProcessing(); not working for now
 
 }
 void I2S_periodic(void){
