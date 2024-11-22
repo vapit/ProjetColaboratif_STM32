@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
- ******************************************************************************
+ *******************************************************************************
  * @file           : main.c
  * @brief          : Main program body
- ******************************************************************************
+ *******************************************************************************
  * @attention
  *
  * Copyright (c) 2024 STMicroelectronics.
@@ -13,7 +13,7 @@
  * in the root directory of this software component.
  * If no LICENSE file comes with this software, it is provided AS-IS.
  *
- ******************************************************************************
+ *******************************************************************************
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -31,16 +31,31 @@
 /* USER CODE BEGIN Includes */
 #include "app.h"
 #include <stdio.h>
+#include "string.h"
+#include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery.h"
+#include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery_lcd.h"
+// #include "stm32412g_discovery_io.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct
+{
+  uint16_t x;             // Position X
+  uint16_t y;             // Position Y
+  uint16_t width;         // Largeur
+  uint16_t height;        // Hauteur
+  uint32_t color;         // Couleur par défaut
+  uint32_t selectedColor; // Couleur en surbrillance
+  const char *label;      // Texte du bouton
+} Button;
 
+JOYState_TypeDef lastJoystickState = JOY_NONE; // Dernier état du joystick
+uint32_t lastDebounceTime = 0;                 // Horodatage du dernier changement
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +65,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
 extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
 extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter1;
@@ -72,10 +86,14 @@ uint32_t DmaRightRecHalfBuffCplt = 0;
 uint32_t DmaRightRecBuffCplt = 0;
 uint32_t PlaybackStarted = 0;
 uint32_t i = 0;
+Button buttons[4];                  // Tableau pour les 4 boutons
+uint8_t selectedButton = 0;         // Indice du bouton sélectionné
+uint8_t previousSelectedButton = 0; // Variable pour suivre l'état précédent de la sélection
 uint32_t j = 0;
 uint32_t EffetNB = 0;
 uint16_t istart= 1024;
 uint16_t istop= 2048;
+int16_t size_echo=0;
 
 
 /* USER CODE END PV */
@@ -85,10 +103,136 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
 static void Playback_Init(void);
+void InitializeButtons();
+void HighlightButton(uint8_t index);
+void HandleJoystick();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/**
+ * @brief Initialisation des boutons à l'écran LCD
+ */
+void InitializeButtons()
+{
+  // Définir les positions, dimensions, couleurs et labels des boutons
+  buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
+  buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
+  buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
+  buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
+
+  // Dessiner les boutons avec leurs labels
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    BSP_LCD_SetTextColor(buttons[i].color);
+    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+
+    // Afficher le label centré sur chaque bouton
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);  // Couleur du texte
+    BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
+    BSP_LCD_DisplayStringAt(
+        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+        (uint8_t *)buttons[i].label,
+        LEFT_MODE);
+  }
+  previousSelectedButton = selectedButton; // Initialiser l'état précédent
+  HighlightButton(0);                      // Mettre le premier bouton en surbrillance
+}
+
+void HighlightButton(uint8_t index)
+{
+  // Réinitialiser tous les boutons à leur couleur par défaut
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    BSP_LCD_SetTextColor(i == index ? buttons[i].selectedColor : buttons[i].color);
+    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+
+    // Réafficher les labels avec les couleurs mises à jour
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);                                          // Couleur du texte
+    BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
+    BSP_LCD_DisplayStringAt(
+        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+        (uint8_t *)buttons[i].label,
+        LEFT_MODE);
+  }
+
+  // Mettre à jour l'état précédent
+  previousSelectedButton = index;
+}
+
+void ResetButtons()
+{
+  // Met à jour les couleurs : sélectionné en vert, les autres en bleu
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    if (i == selectedButton)
+    {
+      buttons[i].color = LCD_COLOR_GREEN;
+      buttons[i].selectedColor = LCD_COLOR_GREEN;
+      EffetNB=i;
+    }
+    else
+    {
+      buttons[i].color = LCD_COLOR_BLUE;
+      buttons[i].selectedColor = LCD_COLOR_RED;
+    }
+  }
+
+  // Redessiner tous les boutons avec le bouton sélectionné en vert
+  HighlightButton(selectedButton);
+}
+
+void HandleJoystick()
+{
+  JOYState_TypeDef joystickState = BSP_JOY_GetState();
+  uint32_t currentTime = HAL_GetTick(); // Obtenir le temps système actuel
+
+  if (currentTime > lastDebounceTime + DEBONCE_DELAY)
+  {
+    switch (joystickState)
+    {
+    case JOY_UP:
+      if (selectedButton > 1)
+        selectedButton -= 2; // Bouton au-dessus
+
+      lastDebounceTime = currentTime;
+      break;
+    case JOY_DOWN:
+      if (selectedButton < 2)
+        selectedButton += 2; // Bouton en dessous
+
+      lastDebounceTime = currentTime;
+      break;
+    case JOY_LEFT:
+      if (selectedButton % 2 == 1)
+        selectedButton--; // Bouton à gauche
+
+      lastDebounceTime = currentTime;
+      break;
+    case JOY_RIGHT:
+      if (selectedButton % 2 == 0)
+        selectedButton++; // Bouton à droite
+
+      lastDebounceTime = currentTime;
+      break;
+    case JOY_SEL:
+      ResetButtons(); // Appliquer la sélection
+
+      lastDebounceTime = currentTime;
+      return; // Pas besoin de surbrillance supplémentaire
+
+    default:
+      return;
+    }
+    
+    HighlightButton(selectedButton); // Mettre à jour la surbrillance
+                                     // HAL_Delay(200);                  // Anti-rebond
+  }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -120,19 +264,23 @@ int main(void)
 	/* USER CODE BEGIN SysInit */
 	/* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_DMA_Init();
-	MX_FSMC_Init();
-	MX_I2C1_Init();
-	MX_I2C2_Init();
-	MX_I2S3_Init();
-	MX_QUADSPI_Init();
-	MX_USART2_UART_Init();
-	MX_DFSDM1_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_FSMC_Init();
+  MX_I2C1_Init();
+  MX_I2C2_Init();
+  MX_I2S3_Init();
+  MX_QUADSPI_Init();
+  MX_USART2_UART_Init();
+  MX_DFSDM1_Init();
+  BSP_LCD_Init();
+  BSP_LCD_Clear(LCD_COLOR_WHITE);
+  BSP_JOY_Init(JOY_MODE_GPIO);
 
-	/* USER CODE END 2 */
+  /* USER CODE BEGIN 2 */
+  InitializeButtons();
+  /* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
@@ -152,8 +300,11 @@ int main(void)
 		I2S_periodic();
 		app_periodic();
 		//storingAudioIntoBuffer();
+    HandleJoystick();
 		echobox(EffetNB);
-	}
+	
+
+  }
 }
 
 /* USER CODE END 3 */
@@ -317,7 +468,8 @@ static void Playback_Init(void)
 	HAL_I2S_DMAStop(&haudio_i2s);
 }
 
-void audioReceptionInit (void){
+void audioReceptionInit(void)
+{
 
 	Playback_Init();
 	BSP_LED_Init(LED3);
@@ -372,12 +524,12 @@ void storingAudioIntoBuffer(void)
 		DmaRightRecBuffCplt = 0;
 	}
 }
-void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32_t *p_in_right,int16_t *p_out)
+void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32_t *p_in_right,int16_t *p_out, int16_t size_echo)
 {
 	uint16_t i=0;
-	int16_t idx_m1 = idxarray-SIZE_ECHO;
-	int16_t idx_m2 = idxarray-SIZE_ECHO*2;
-	int16_t idx_m3 = idxarray-SIZE_ECHO*3;
+	int16_t idx_m1 = idxarray-size_echo;
+	int16_t idx_m2 = idxarray-size_echo*2;
+	int16_t idx_m3 = idxarray-size_echo*3;
 	if (idx_m1<0)
 	{
 		idx_m1+=20;
@@ -409,11 +561,26 @@ void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32
 }
 void echobox(uint32_t EffetNB)
 {
+	if (EffetNB==0)
+	{
+		size_echo = 1;
+	}
+	if (EffetNB==1)
+	{
+		size_echo = 3;
+	}
+	if (EffetNB==2)
+	{
+		size_echo = 5;
+	}
+  if(EffetNB==3){
+    size_echo = 7;
+  }
 	if ((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
 	{
 		/* Store values on Play buff */
 
-			proccessEcho(0,1024,LeftRecBuff,RightRecBuff,PlayBuff);
+			proccessEcho(0,1024,LeftRecBuff,RightRecBuff,PlayBuff,size_echo);
 
 		if (PlaybackStarted == 0)
 		{
@@ -434,7 +601,7 @@ void echobox(uint32_t EffetNB)
 	{
 		/* Store values on Play buff */
 
-		proccessEcho(1024,2048,LeftRecBuff,RightRecBuff,PlayBuff);
+		proccessEcho(1024,2048,LeftRecBuff,RightRecBuff,PlayBuff,size_echo);
 
 		DmaLeftRecBuffCplt = 0;
 		DmaRightRecBuffCplt = 0;

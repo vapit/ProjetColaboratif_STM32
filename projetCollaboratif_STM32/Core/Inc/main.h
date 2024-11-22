@@ -212,7 +212,7 @@ void echobox(uint32_t EffetNB);
 #define LED2_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
-
+#define DEBONCE_DELAY 400
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

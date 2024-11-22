@@ -1,13 +1,18 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
+<<<<<<<< HEAD:projetCollaboratif_STM32/Core/Inc/dma.h
   * @file    dma.h
   * @brief   This file contains all the function prototypes for
   *          the dma.c file
+========
+  * @file    cpu_utils.h
+  * @author  MCD Application Team
+  * @brief   Header for cpu_utils module
+>>>>>>>> Yann:projetCollaboratif_STM32/Utilities/CPU/cpu_utils.h
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2014 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -16,13 +21,14 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __DMA_H__
 #define __DMA_H__
 
+
 #ifdef __cplusplus
-extern "C" {
+ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -44,9 +50,11 @@ void MX_DMA_Init(void);
 
 /* USER CODE END Prototypes */
 
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __DMA_H__ */
+
 
