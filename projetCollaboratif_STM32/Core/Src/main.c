@@ -103,127 +103,107 @@ void HandleJoystick();
  */
 void InitializeButtons()
 {
-  // Définir les positions, dimensions, couleurs et labels des boutons
-  buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
-  buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
-  buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
-  buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
+    // Définir les positions, dimensions, couleurs et labels des boutons
+    buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
+    buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
+    buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
+    buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
 
-  // Dessiner les boutons et afficher leurs labels
-  for (uint8_t i = 0; i < 4; i++)
-  {
-    BSP_LCD_SetTextColor(buttons[i].color);
-    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+    // Dessiner les boutons avec leurs labels
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        BSP_LCD_SetTextColor(buttons[i].color);
+        BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
 
-    // Afficher le label centré sur le bouton
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);  // Couleur du texte
-    BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
-    BSP_LCD_DisplayStringAt(
-        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
-        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
-        (uint8_t *)buttons[i].label,
-        LEFT_MODE);
-  }
-  previousSelectedButton = selectedButton; // Initialiser l'état précédent
-  HighlightButton(0);                      // Mettre le premier bouton en surbrillance
+        // Afficher le label centré sur chaque bouton
+        BSP_LCD_SetTextColor(LCD_COLOR_WHITE);  // Couleur du texte
+        BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
+        BSP_LCD_DisplayStringAt(
+            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+            buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+            (uint8_t *)buttons[i].label,
+            LEFT_MODE);
+    }
+    previousSelectedButton = selectedButton; // Initialiser l'état précédent
+    HighlightButton(0);                      // Mettre le premier bouton en surbrillance
 }
 
-/**
- * @brief Met en surbrillance un bouton spécifique
- * @param index L'indice du bouton à surligner
- */
 void HighlightButton(uint8_t index)
 {
-  // Si le bouton sélectionné n'a pas changé, ne pas redessiner
-  if (index == previousSelectedButton)
-  {
-    return;
-  }
-
-  // Dessiner les boutons sans leur label
-  for (uint8_t i = 0; i < 4; i++)
-  {
-    if (i == index)
+    // Réinitialiser tous les boutons à leur couleur par défaut
+    for (uint8_t i = 0; i < 4; i++)
     {
-      BSP_LCD_SetTextColor(buttons[i].selectedColor); // Choisir la couleur de surbrillance
-    }
-    else
-    {
-      BSP_LCD_SetTextColor(buttons[i].color); // Couleur par défaut
-    }
-    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
-  }
+        BSP_LCD_SetTextColor(i == index ? buttons[i].selectedColor : buttons[i].color);
+        BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
 
-  // Réafficher les labels (en maintenant la couleur du texte)
-  for (uint8_t i = 0; i < 4; i++)
-  {
-    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);                                          // Couleur du texte
-    BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
-    BSP_LCD_DisplayStringAt(
-        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
-        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
-        (uint8_t *)buttons[i].label,
-        LEFT_MODE);
-  }
+        // Réafficher les labels avec les couleurs mises à jour
+        BSP_LCD_SetTextColor(LCD_COLOR_WHITE);                                          // Couleur du texte
+        BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
+        BSP_LCD_DisplayStringAt(
+            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+            buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+            (uint8_t *)buttons[i].label,
+            LEFT_MODE);
+    }
 
-  // Mettre à jour l'état précédent
-  previousSelectedButton = index;
+    // Mettre à jour l'état précédent
+    previousSelectedButton = index;
 }
 
-/**
- * @brief Réinitialise l'état de tous les boutons (ils retournent à leur couleur bleue sauf celui activé)
- */
-void ResetButtons() {
-    for (uint8_t i = 0; i < 4; i++) {
-        if (i == selectedButton) {
-            // Le bouton sélectionné devient vert
+void ResetButtons()
+{
+    // Met à jour les couleurs : sélectionné en vert, les autres en bleu
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        if (i == selectedButton)
+        {
             buttons[i].color = LCD_COLOR_GREEN;
             buttons[i].selectedColor = LCD_COLOR_GREEN;
-        } else {
-            // Les autres boutons retournent à leur couleur initiale bleue
+        }
+        else
+        {
             buttons[i].color = LCD_COLOR_BLUE;
             buttons[i].selectedColor = LCD_COLOR_RED;
         }
     }
-    HighlightButton(selectedButton); // Mettre à jour la surbrillance après modification
+
+    // Redessiner tous les boutons avec le bouton sélectionné en vert
+    HighlightButton(selectedButton);
 }
 
-/**
- * @brief Gère les interactions avec le joystick
- */
 void HandleJoystick()
 {
-  JOYState_TypeDef joystickState = BSP_JOY_GetState();
+    JOYState_TypeDef joystickState = BSP_JOY_GetState();
 
-  switch (joystickState)
-  {
-  case JOY_UP:
-    if (selectedButton > 1)
-      selectedButton -= 2; // Bouton au-dessus
-    break;
-  case JOY_DOWN:
-    if (selectedButton < 2)
-      selectedButton += 2; // Bouton en dessous
-    break;
-  case JOY_LEFT:
-    if (selectedButton % 2 == 1)
-      selectedButton--; // Bouton à gauche
-    break;
-  case JOY_RIGHT:
-    if (selectedButton % 2 == 0)
-      selectedButton++; // Bouton à droite
-    break;
-  case JOY_SEL:
-    // Changer la couleur du bouton sélectionné et désactiver les autres
-    ResetButtons();
-    break;
-  default:
-    break;
-  }
+    switch (joystickState)
+    {
+    case JOY_UP:
+        if (selectedButton > 1)
+            selectedButton -= 2; // Bouton au-dessus
+        break;
+    case JOY_DOWN:
+        if (selectedButton < 2)
+            selectedButton += 2; // Bouton en dessous
+        break;
+    case JOY_LEFT:
+        if (selectedButton % 2 == 1)
+            selectedButton--; // Bouton à gauche
+        break;
+    case JOY_RIGHT:
+        if (selectedButton % 2 == 0)
+            selectedButton++; // Bouton à droite
+        break;
+    case JOY_SEL:
+        ResetButtons(); // Appliquer la sélection
+        return;         // Pas besoin de surbrillance supplémentaire
+    default:
+        break;
+    }
 
-  HighlightButton(selectedButton); // Mettre à jour la surbrillance si nécessaire
-  HAL_Delay(200);                  // Anti-rebond
+    HighlightButton(selectedButton); // Mettre à jour la surbrillance
+    HAL_Delay(200);                  // Anti-rebond
 }
+
 
 /* USER CODE END 0 */
 
