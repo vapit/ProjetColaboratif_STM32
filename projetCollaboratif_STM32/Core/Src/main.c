@@ -46,6 +46,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define SaturaLH(N, L, H) (((N) < (L)) ? (L) : (((N) > (H)) ? (H) : (N)))
+#define SIZE_ECHO 3
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,22 +56,28 @@ extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
 extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter1;
 extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;
 extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
-DMA_HandleTypeDef 			 hLeftDma;
-DMA_HandleTypeDef 		     hRightDma;
-I2S_HandleTypeDef 			 haudio_i2s;
-DMA_HandleTypeDef 			 hdma_i2s_tx;
-AUDIO_DrvTypeDef 	         *audio_drv;
-int32_t 					 LeftRecBuff[2048];
-int32_t 					 RightRecBuff[2048];
-int16_t 					 PlayBuff[4096];
-uint32_t 					 DmaLeftRecHalfBuffCplt = 0;
-uint32_t 					 DmaLeftRecBuffCplt = 0;
-uint32_t 					 DmaRightRecHalfBuffCplt = 0;
-uint32_t   					 DmaRightRecBuffCplt = 0;
-uint32_t  					 PlaybackStarted = 0;
-uint32_t 					 i = 0;
-int16_t 					 ReducedLeftBuff[128];  // Tableau réduit pour le canal gauche
-int16_t 					 ReducedRightBuff[128]; // Tableau réduit pour le canal droit
+DMA_HandleTypeDef hLeftDma;
+DMA_HandleTypeDef hRightDma;
+I2S_HandleTypeDef haudio_i2s;
+DMA_HandleTypeDef hdma_i2s_tx;
+AUDIO_DrvTypeDef *audio_drv;
+int32_t LeftRecBuff[2048];
+int32_t RightRecBuff[2048];
+int16_t DelayBuff[20][4096];
+uint16_t idxarray=0;
+int16_t PlayBuff[4096];
+uint32_t DmaLeftRecHalfBuffCplt = 0;
+uint32_t DmaLeftRecBuffCplt = 0;
+uint32_t DmaRightRecHalfBuffCplt = 0;
+uint32_t DmaRightRecBuffCplt = 0;
+uint32_t PlaybackStarted = 0;
+uint32_t i = 0;
+uint32_t j = 0;
+uint32_t EffetNB = 0;
+uint16_t istart= 1024;
+uint16_t istop= 2048;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +85,6 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
 static void Playback_Init(void);
-void cubemoniteur(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -145,10 +151,8 @@ int main(void)
 		I2C_periodic();
 		I2S_periodic();
 		app_periodic();
-		storingAudioIntoBuffer();
-		cubemoniteur();
-
-
+		//storingAudioIntoBuffer();
+		echobox(EffetNB);
 	}
 }
 
@@ -328,14 +332,6 @@ void audioReceptionInit (void){
 	}
 
 }
-void cubemoniteur(void) {
-	for (int i = 0; i < 128; i++)  // On veut 128 échantillons espacés de 8
-	{
-		ReducedLeftBuff[i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);  // tableau pour voir la courbe
-		ReducedRightBuff[i] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767) ; // tableau pour voire la courbe
-	}
-}
-
 void storingAudioIntoBuffer(void)
 {
 
@@ -347,6 +343,77 @@ void storingAudioIntoBuffer(void)
 			PlayBuff[2 * i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
 			PlayBuff[(2 * i) + 1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
 		}
+		if (PlaybackStarted == 0)
+		{
+			if (0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *)&PlayBuff[0], 4096))
+			{
+				Error_Handler();
+			}
+			if (HAL_OK != HAL_I2S_Transmit_DMA(&haudio_i2s, (uint16_t *)&PlayBuff[0], 4096))
+			{
+				Error_Handler();
+			}
+			PlaybackStarted = 1;
+		}
+		DmaLeftRecHalfBuffCplt = 0;
+		DmaRightRecHalfBuffCplt = 0;
+	}
+	if ((DmaLeftRecBuffCplt == 1) && (DmaRightRecBuffCplt == 1))
+	{
+		/* Store values on Play buff */
+
+		for (i = 1024; i < 2048; i++)
+		{
+			PlayBuff[2 * i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
+			PlayBuff[(2 * i) + 1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
+		}
+
+		DmaLeftRecBuffCplt = 0;
+		DmaRightRecBuffCplt = 0;
+	}
+}
+void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32_t *p_in_right,int16_t *p_out)
+{
+	uint16_t i=0;
+	int16_t idx_m1 = idxarray-SIZE_ECHO;
+	int16_t idx_m2 = idxarray-SIZE_ECHO*2;
+	int16_t idx_m3 = idxarray-SIZE_ECHO*3;
+	if (idx_m1<0)
+	{
+		idx_m1+=20;
+	}
+	if (idx_m2<0)
+	{
+		idx_m2+=20;
+	}
+	if (idx_m3<0)
+	{
+		idx_m3+=20;
+	}
+	for(i=idx_start;i<idx_stop;i++)
+	{
+		DelayBuff[idxarray][2 * i] = SaturaLH((p_in_left[i] >> 8), -32768, 32767);
+		DelayBuff[idxarray][(2 * i) + 1] = SaturaLH((p_in_right[i] >> 8), -32768, 32767);
+		p_out[2 * i] = DelayBuff[idxarray][2 * i]+DelayBuff[idx_m1][2 * i]/2+DelayBuff[idx_m2][2 * i]/3+DelayBuff[idx_m3][2 * i]/4;
+		p_out[(2 * i)+1] = DelayBuff[idxarray][(2 * i)+1]+DelayBuff[idx_m1][(2 * i)+1]/2+DelayBuff[idx_m2][(2 * i)+1]/3+DelayBuff[idx_m3][(2 * i)+1]/4;
+	}
+	if (i == 2048)
+	{
+		idxarray++;
+	}
+	if (idxarray == 20)
+	{
+		idxarray=0;
+	}
+
+}
+void echobox(uint32_t EffetNB)
+{
+	if ((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
+	{
+		/* Store values on Play buff */
+
+			proccessEcho(0,1024,LeftRecBuff,RightRecBuff,PlayBuff);
 
 		if (PlaybackStarted == 0)
 		{
@@ -366,16 +433,13 @@ void storingAudioIntoBuffer(void)
 	if ((DmaLeftRecBuffCplt == 1) && (DmaRightRecBuffCplt == 1))
 	{
 		/* Store values on Play buff */
-		for (i = 1024; i < 2048; i++)
-		{
-			PlayBuff[2 * i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
-			PlayBuff[(2 * i) + 1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
-		}
+
+		proccessEcho(1024,2048,LeftRecBuff,RightRecBuff,PlayBuff);
+
 		DmaLeftRecBuffCplt = 0;
 		DmaRightRecBuffCplt = 0;
 	}
 }
-
 /**
  * @brief  This function is executed in case of error occurrence.
  * @param  None
