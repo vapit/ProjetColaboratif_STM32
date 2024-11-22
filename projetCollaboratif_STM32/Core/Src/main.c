@@ -196,7 +196,7 @@ int main(void)
 /**
   * @brief System Clock Configuration
   * @retval None
-  */
+  *
   * @brief System Clock Configuration
   * @retval None
   */
