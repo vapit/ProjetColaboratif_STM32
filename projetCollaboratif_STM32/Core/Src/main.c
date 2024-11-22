@@ -31,21 +31,23 @@
 /* USER CODE BEGIN Includes */
 #include "app.h"
 #include <stdio.h>
+#include "string.h"
 #include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery.h"
 #include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery_lcd.h"
-//#include "stm32412g_discovery_io.h"
+// #include "stm32412g_discovery_io.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct {
-    uint16_t x;            // Position X
-    uint16_t y;            // Position Y
-    uint16_t width;        // Largeur
-    uint16_t height;       // Hauteur
-    uint32_t color;        // Couleur par défaut
-    uint32_t selectedColor; // Couleur en surbrillance
-    const char *label;     // Texte du bouton
+typedef struct
+{
+  uint16_t x;             // Position X
+  uint16_t y;             // Position Y
+  uint16_t width;         // Largeur
+  uint16_t height;        // Hauteur
+  uint32_t color;         // Couleur par défaut
+  uint32_t selectedColor; // Couleur en surbrillance
+  const char *label;      // Texte du bouton
 } Button;
 /* USER CODE END PTD */
 
@@ -77,8 +79,9 @@ uint32_t DmaLeftRecBuffCplt = 0;
 uint32_t DmaRightRecHalfBuffCplt = 0;
 uint32_t DmaRightRecBuffCplt = 0;
 uint32_t PlaybackStarted = 0;
-uint32_t i = 0;Button buttons[4];          // Tableau pour les 4 boutons
-uint8_t selectedButton = 0; // Indice du bouton sélectionné
+uint32_t i = 0;
+Button buttons[4];                  // Tableau pour les 4 boutons
+uint8_t selectedButton = 0;         // Indice du bouton sélectionné
 uint8_t previousSelectedButton = 0; // Variable pour suivre l'état précédent de la sélection
 /* USER CODE END PV */
 
@@ -86,7 +89,8 @@ uint8_t previousSelectedButton = 0; // Variable pour suivre l'état précédent 
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
-static void Playback_Init(void);void InitializeButtons();
+static void Playback_Init(void);
+void InitializeButtons();
 void HighlightButton(uint8_t index);
 void HandleJoystick();
 /* USER CODE END PFP */
@@ -97,106 +101,120 @@ void HandleJoystick();
 /**
  * @brief Initialisation des boutons à l'écran LCD
  */
-void InitializeButtons() {
-    // Définir les positions, dimensions, couleurs et labels des boutons
-    buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
-    buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
-    buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
-    buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
+void InitializeButtons()
+{
+  // Définir les positions, dimensions, couleurs et labels des boutons
+  buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
+  buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
+  buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
+  buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
 
-    // Dessiner les boutons et afficher leurs labels
-    for (uint8_t i = 0; i < 4; i++) {
-        BSP_LCD_SetTextColor(buttons[i].color);
-        BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+  // Dessiner les boutons et afficher leurs labels
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    BSP_LCD_SetTextColor(buttons[i].color);
+    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
 
-        // Afficher le label centré sur le bouton
-        BSP_LCD_SetTextColor(LCD_COLOR_WHITE); // Couleur du texte
-        BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
-        BSP_LCD_DisplayStringAt(
-            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
-            buttons[i].y + (buttons[i].height / 2) - 8, // Centrer verticalement
-            (uint8_t *)buttons[i].label,
-            LEFT_MODE
-        );
-    }
-    previousSelectedButton = selectedButton; // Initialiser l'état précédent
-    HighlightButton(0); // Mettre le premier bouton en surbrillance
+    // Afficher le label centré sur le bouton
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);  // Couleur du texte
+    BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
+    BSP_LCD_DisplayStringAt(
+        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+        (uint8_t *)buttons[i].label,
+        LEFT_MODE);
+  }
+  previousSelectedButton = selectedButton; // Initialiser l'état précédent
+  HighlightButton(0);                      // Mettre le premier bouton en surbrillance
 }
 
 /**
  * @brief Met en surbrillance un bouton spécifique
  * @param index L'indice du bouton à surligner
  */
-void HighlightButton(uint8_t index) {
-    // Si le bouton sélectionné n'a pas changé, ne pas redessiner
-    if (index == previousSelectedButton) {
-        return;
-    }
+void HighlightButton(uint8_t index)
+{
+  // Si le bouton sélectionné n'a pas changé, ne pas redessiner
+  if (index == previousSelectedButton)
+  {
+    return;
+  }
 
-    // Dessiner les boutons sans leur label
-    for (uint8_t i = 0; i < 4; i++) {
-        if (i == index) {
-            BSP_LCD_SetTextColor(buttons[i].selectedColor); // Choisir la couleur de surbrillance
-        } else {
-            BSP_LCD_SetTextColor(buttons[i].color); // Couleur par défaut
-        }
-        BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+  // Dessiner les boutons sans leur label
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    if (i == index)
+    {
+      BSP_LCD_SetTextColor(buttons[i].selectedColor); // Choisir la couleur de surbrillance
     }
-
-    // Réafficher les labels (en maintenant la couleur du texte)
-    for (uint8_t i = 0; i < 4; i++) {
-        BSP_LCD_SetTextColor(LCD_COLOR_WHITE); // Couleur du texte
-        BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
-        BSP_LCD_DisplayStringAt(
-            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
-            buttons[i].y + (buttons[i].height / 2) - 8, // Centrer verticalement
-            (uint8_t *)buttons[i].label,
-            LEFT_MODE
-        );
+    else
+    {
+      BSP_LCD_SetTextColor(buttons[i].color); // Couleur par défaut
     }
+    BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+  }
 
-    // Mettre à jour l'état précédent
-    previousSelectedButton = index;
+  // Réafficher les labels (en maintenant la couleur du texte)
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);                                          // Couleur du texte
+    BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
+    BSP_LCD_DisplayStringAt(
+        buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+        buttons[i].y + (buttons[i].height / 2) - 8,                             // Centrer verticalement
+        (uint8_t *)buttons[i].label,
+        LEFT_MODE);
+  }
+
+  // Mettre à jour l'état précédent
+  previousSelectedButton = index;
 }
 
 /**
  * @brief Gère les interactions avec le joystick
  */
-void HandleJoystick() {
-    JOYState_TypeDef joystickState = BSP_JOY_GetState();
+void HandleJoystick()
+{
+  JOYState_TypeDef joystickState = BSP_JOY_GetState();
 
-    switch (joystickState) {
-        case JOY_UP:
-            if (selectedButton > 1) selectedButton -= 2; // Bouton au-dessus
-            break;
-        case JOY_DOWN:
-            if (selectedButton < 2) selectedButton += 2; // Bouton en dessous
-            break;
-        case JOY_LEFT:
-            if (selectedButton % 2 == 1) selectedButton--; // Bouton à gauche
-            break;
-        case JOY_RIGHT:
-            if (selectedButton % 2 == 0) selectedButton++; // Bouton à droite
-            break;
-        case JOY_SEL:
-            // Changer la couleur du bouton sélectionné
-            buttons[selectedButton].color = LCD_COLOR_GREEN;
-            break;
-        default:
-            break;
-    }
+  switch (joystickState)
+  {
+  case JOY_UP:
+    if (selectedButton > 1)
+      selectedButton -= 2; // Bouton au-dessus
+    break;
+  case JOY_DOWN:
+    if (selectedButton < 2)
+      selectedButton += 2; // Bouton en dessous
+    break;
+  case JOY_LEFT:
+    if (selectedButton % 2 == 1)
+      selectedButton--; // Bouton à gauche
+    break;
+  case JOY_RIGHT:
+    if (selectedButton % 2 == 0)
+      selectedButton++; // Bouton à droite
+    break;
+  case JOY_SEL:
+    // Changer la couleur du bouton sélectionné
+    buttons[selectedButton].color = LCD_COLOR_GREEN;
+    break;
+  default:
+    break;
+  }
 
-    HighlightButton(selectedButton); // Mettre à jour la surbrillance si nécessaire
-    HAL_Delay(200); // Anti-rebond
+  HighlightButton(selectedButton); // Mettre à jour la surbrillance si nécessaire
+  HAL_Delay(200);                  // Anti-rebond
 }
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void) {
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void)
+{
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -254,6 +272,7 @@ int main(void) {
     I2S_periodic();
     app_periodic();
     storingAudioIntoBuffer();
+    HandleJoystick();
   }
 }
 
@@ -275,8 +294,8 @@ void SystemClock_Config(void)
    */
   __HAL_RCC_DFSDM1AUDIO_CONFIG(RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1);
 
-    __HAL_RCC_PWR_CLK_ENABLE();
-    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
    * in the RCC_OscInitTypeDef structure.
@@ -295,12 +314,11 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                                |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
@@ -415,7 +433,8 @@ static void Playback_Init(void)
   HAL_I2S_DMAStop(&haudio_i2s);
 }
 
-void audioReceptionInit (void){
+void audioReceptionInit(void)
+{
 
   Playback_Init();
   BSP_LED_Init(LED3);
@@ -428,7 +447,6 @@ void audioReceptionInit (void){
   {
     Error_Handler();
   }
-
 }
 void storingAudioIntoBuffer(void)
 {

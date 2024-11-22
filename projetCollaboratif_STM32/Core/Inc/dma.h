@@ -23,13 +23,9 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-<<<<<<<< HEAD:projetCollaboratif_STM32/Core/Inc/dma.h
 #ifndef __DMA_H__
 #define __DMA_H__
-========
-#ifndef _CPU_UTILS_H__
-#define _CPU_UTILS_H__
->>>>>>>> Yann:projetCollaboratif_STM32/Utilities/CPU/cpu_utils.h
+
 
 #ifdef __cplusplus
  extern "C" {
@@ -38,7 +34,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-<<<<<<<< HEAD:projetCollaboratif_STM32/Core/Inc/dma.h
 /* DMA memory to memory transfer handles -------------------------------------*/
 
 /* USER CODE BEGIN Includes */
@@ -54,24 +49,12 @@ void MX_DMA_Init(void);
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */
-========
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-#define CALCULATION_PERIOD    1000
 
-/* Exported functions ------------------------------------------------------- */
-uint16_t osGetCPUUsage (void);
->>>>>>>> Yann:projetCollaboratif_STM32/Utilities/CPU/cpu_utils.h
 
 #ifdef __cplusplus
 }
 #endif
 
-<<<<<<<< HEAD:projetCollaboratif_STM32/Core/Inc/dma.h
 #endif /* __DMA_H__ */
 
-========
-#endif /* _CPU_UTILS_H__ */
->>>>>>>> Yann:projetCollaboratif_STM32/Utilities/CPU/cpu_utils.h
+
