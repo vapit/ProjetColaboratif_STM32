@@ -76,6 +76,7 @@ uint32_t j = 0;
 uint32_t EffetNB = 0;
 uint16_t istart= 1024;
 uint16_t istop= 2048;
+int16_t size_echo=0;
 
 
 /* USER CODE END PV */
@@ -372,12 +373,12 @@ void storingAudioIntoBuffer(void)
 		DmaRightRecBuffCplt = 0;
 	}
 }
-void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32_t *p_in_right,int16_t *p_out)
+void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32_t *p_in_right,int16_t *p_out, int16_t size_echo)
 {
 	uint16_t i=0;
-	int16_t idx_m1 = idxarray-SIZE_ECHO;
-	int16_t idx_m2 = idxarray-SIZE_ECHO*2;
-	int16_t idx_m3 = idxarray-SIZE_ECHO*3;
+	int16_t idx_m1 = idxarray-size_echo;
+	int16_t idx_m2 = idxarray-size_echo*2;
+	int16_t idx_m3 = idxarray-size_echo*3;
 	if (idx_m1<0)
 	{
 		idx_m1+=20;
@@ -409,11 +410,23 @@ void proccessEcho(uint16_t idx_start,uint16_t idx_stop, int32_t *p_in_left,int32
 }
 void echobox(uint32_t EffetNB)
 {
+	if (EffetNB==0)
+	{
+		size_echo = 1;
+	}
+	if (EffetNB==1)
+	{
+		size_echo = 3;
+	}
+	if (EffetNB==2)
+	{
+		size_echo = 5;
+	}
 	if ((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
 	{
 		/* Store values on Play buff */
 
-			proccessEcho(0,1024,LeftRecBuff,RightRecBuff,PlayBuff);
+			proccessEcho(0,1024,LeftRecBuff,RightRecBuff,PlayBuff,size_echo);
 
 		if (PlaybackStarted == 0)
 		{
@@ -434,7 +447,7 @@ void echobox(uint32_t EffetNB)
 	{
 		/* Store values on Play buff */
 
-		proccessEcho(1024,2048,LeftRecBuff,RightRecBuff,PlayBuff);
+		proccessEcho(1024,2048,LeftRecBuff,RightRecBuff,PlayBuff,size_echo);
 
 		DmaLeftRecBuffCplt = 0;
 		DmaRightRecBuffCplt = 0;
