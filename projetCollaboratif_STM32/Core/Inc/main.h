@@ -58,7 +58,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void storingAudioIntoBuffer(void);
 void audioReceptionInit(void);
-void echobox(uint32_t EffetNB);
+void echobox(uint8_t EffetNB);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
