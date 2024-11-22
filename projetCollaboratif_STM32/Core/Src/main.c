@@ -172,6 +172,7 @@ void ResetButtons()
     {
       buttons[i].color = LCD_COLOR_GREEN;
       buttons[i].selectedColor = LCD_COLOR_GREEN;
+      EffetNB=i;
     }
     else
     {
@@ -219,13 +220,14 @@ void HandleJoystick()
       break;
     case JOY_SEL:
       ResetButtons(); // Appliquer la sélection
+
       lastDebounceTime = currentTime;
       return; // Pas besoin de surbrillance supplémentaire
 
     default:
       return;
     }
-
+    
     HighlightButton(selectedButton); // Mettre à jour la surbrillance
                                      // HAL_Delay(200);                  // Anti-rebond
   }
@@ -298,7 +300,7 @@ int main(void)
 		I2S_periodic();
 		app_periodic();
 		//storingAudioIntoBuffer();
-        HandleJoystick();
+    HandleJoystick();
 		echobox(EffetNB);
 	
 
@@ -571,6 +573,9 @@ void echobox(uint32_t EffetNB)
 	{
 		size_echo = 5;
 	}
+  if(EffetNB==3){
+    size_echo = 7;
+  }
 	if ((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
 	{
 		/* Store values on Play buff */
