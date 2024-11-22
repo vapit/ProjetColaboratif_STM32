@@ -565,7 +565,7 @@ void echobox(uint8_t EffetNB)
     size_echo = 5;
     break;
   case 3:
-    size_echo = 7;
+    size_echo = 6;
     break;
   default:
     break;
