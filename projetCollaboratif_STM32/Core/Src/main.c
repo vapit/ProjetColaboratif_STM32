@@ -105,7 +105,7 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-/* Configure the peripherals common clocks */
+  /* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
@@ -246,9 +246,9 @@ void PeriphCommonClock_Config(void)
   */
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_PLLI2S|RCC_PERIPHCLK_I2S_APB1
                               |RCC_PERIPHCLK_DFSDM1|RCC_PERIPHCLK_DFSDM1_AUDIO;
-  PeriphClkInitStruct.PLLI2S.PLLI2SN = 200;
+  PeriphClkInitStruct.PLLI2S.PLLI2SN = 344;
   PeriphClkInitStruct.PLLI2S.PLLI2SM = 8;
-  PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
+  PeriphClkInitStruct.PLLI2S.PLLI2SR = 7;
   PeriphClkInitStruct.PLLI2S.PLLI2SQ = 7;
   PeriphClkInitStruct.Dfsdm1ClockSelection = RCC_DFSDM1CLKSOURCE_APB2;
   PeriphClkInitStruct.Dfsdm1AudioClockSelection = RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1;
