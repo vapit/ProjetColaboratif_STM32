@@ -2,7 +2,7 @@
 
 
 typedef struct {
-    bool up,down,left,right;
+    bool up,down,left,right,center;
 } joystick;
 
 
