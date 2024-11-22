@@ -31,6 +31,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "audio.h"
+#include "stm32412g_discovery.h"
+#include "wm8994.h"
 
 /* USER CODE END Includes */
 
@@ -165,8 +168,6 @@ void Error_Handler(void);
 #define USB_OTGFS_ID_GPIO_Port GPIOA
 #define USB_OTGFS_DM_Pin GPIO_PIN_11
 #define USB_OTGFS_DM_GPIO_Port GPIOA
-#define USB_OTGFS_DP_Pin GPIO_PIN_12
-#define USB_OTGFS_DP_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
