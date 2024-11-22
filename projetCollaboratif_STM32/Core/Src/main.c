@@ -123,21 +123,11 @@ int main(void)
   MX_DFSDM1_Init();
   /* USER CODE BEGIN 2 */
 
-  Playback_Init();
-  BSP_LED_Init(LED3);
-  /* Start DFSDM conversions */
-  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, RightRecBuff, 2048))
-  {
-    Error_Handler();
-  }
-  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter1, LeftRecBuff, 2048))
-  {
-    Error_Handler();
-  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  audioReceptionInit();
   UART_init();
   I2C_init();
   I2S_init();
@@ -315,6 +305,22 @@ static void Playback_Init(void)
   }
   /* Stop sending fake I2S data */
   HAL_I2S_DMAStop(&haudio_i2s);
+}
+
+void audioReceptionInit (void){
+
+  Playback_Init();
+  BSP_LED_Init(LED3);
+  /* Start DFSDM conversions */
+  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, RightRecBuff, 2048))
+  {
+    Error_Handler();
+  }
+  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter1, LeftRecBuff, 2048))
+  {
+    Error_Handler();
+  }
+
 }
 void storingAudioIntoBuffer(void)
 {
