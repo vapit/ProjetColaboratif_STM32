@@ -29,7 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery.h"
 #include "../../../Drivers/BSP/STM32412G-Discovery/stm32412g_discovery_lcd.h"
-//#include "stm32412g_discovery_io.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -137,6 +137,24 @@ void HighlightButton(uint8_t index) {
 }
 
 /**
+ * @brief Réinitialise l'état de tous les boutons (ils retournent à leur couleur bleue sauf celui activé)
+ */
+void ResetButtons() {
+    for (uint8_t i = 0; i < 4; i++) {
+        if (i == selectedButton) {
+            // Le bouton sélectionné devient vert
+            buttons[i].color = LCD_COLOR_GREEN;
+            buttons[i].selectedColor = LCD_COLOR_GREEN;
+        } else {
+            // Les autres boutons retournent à leur couleur initiale bleue
+            buttons[i].color = LCD_COLOR_BLUE;
+            buttons[i].selectedColor = LCD_COLOR_RED;
+        }
+    }
+    HighlightButton(selectedButton); // Mettre à jour la surbrillance après modification
+}
+
+/**
  * @brief Gère les interactions avec le joystick
  */
 void HandleJoystick() {
@@ -156,8 +174,8 @@ void HandleJoystick() {
             if (selectedButton % 2 == 0) selectedButton++; // Bouton à droite
             break;
         case JOY_SEL:
-            // Changer la couleur du bouton sélectionné
-            buttons[selectedButton].color = LCD_COLOR_GREEN;
+            // Réinitialiser les boutons et activer le bouton sélectionné
+            ResetButtons();
             break;
         default:
             break;
@@ -168,6 +186,8 @@ void HandleJoystick() {
 }
 
 /* USER CODE END 0 */
+
+
 
 /**
   * @brief  The application entry point.
