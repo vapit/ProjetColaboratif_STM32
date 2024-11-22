@@ -110,11 +110,11 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
-void UART_init(){    //used once before the loop
+void UART_init(void){    //used once before the loop
 
 
 }
-void UART_periodic(){  //inside the loop
+void UART_periodic(void){  //inside the loop
 
 
 }

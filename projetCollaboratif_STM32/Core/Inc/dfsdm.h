@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    sdio.h
+  * @file    dfsdm.h
   * @brief   This file contains all the function prototypes for
-  *          the sdio.c file
+  *          the dfsdm.c file
   ******************************************************************************
   * @attention
   *
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __SDIO_H__
-#define __SDIO_H__
+#ifndef __DFSDM_H__
+#define __DFSDM_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,13 +32,19 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern SD_HandleTypeDef hsd;
+extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
+
+extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter1;
+
+extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;
+
+extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_SDIO_SD_Init(void);
+void MX_DFSDM1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -48,5 +54,5 @@ void MX_SDIO_SD_Init(void);
 }
 #endif
 
-#endif /* __SDIO_H__ */
+#endif /* __DFSDM_H__ */
 
