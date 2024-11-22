@@ -49,6 +49,9 @@ typedef struct
   uint32_t selectedColor; // Couleur en surbrillance
   const char *label;      // Texte du bouton
 } Button;
+
+JOYState_TypeDef lastJoystickState = JOY_NONE; // Dernier état du joystick
+uint32_t lastDebounceTime = 0;                 // Horodatage du dernier changement
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -162,8 +165,8 @@ void ResetButtons()
         }
         else
         {
-            buttons[i].color = LCD_COLOR_BLUE;
-            buttons[i].selectedColor = LCD_COLOR_RED;
+        	buttons[i].color = LCD_COLOR_BLUE;
+        	buttons[i].selectedColor = LCD_COLOR_RED;
         }
     }
 
@@ -173,35 +176,50 @@ void ResetButtons()
 
 void HandleJoystick()
 {
-    JOYState_TypeDef joystickState = BSP_JOY_GetState();
+	JOYState_TypeDef joystickState = BSP_JOY_GetState();
+	uint32_t currentTime = HAL_GetTick(); // Obtenir le temps système actuel
 
-    switch (joystickState)
-    {
-    case JOY_UP:
-        if (selectedButton > 1)
-            selectedButton -= 2; // Bouton au-dessus
-        break;
-    case JOY_DOWN:
-        if (selectedButton < 2)
-            selectedButton += 2; // Bouton en dessous
-        break;
-    case JOY_LEFT:
-        if (selectedButton % 2 == 1)
-            selectedButton--; // Bouton à gauche
-        break;
-    case JOY_RIGHT:
-        if (selectedButton % 2 == 0)
-            selectedButton++; // Bouton à droite
-        break;
-    case JOY_SEL:
-        ResetButtons(); // Appliquer la sélection
-        return;         // Pas besoin de surbrillance supplémentaire
-    default:
-        break;
-    }
+	if(currentTime > lastDebounceTime+ DEBONCE_DELAY){
+		switch (joystickState)
+		{
+		case JOY_UP:
+			if (selectedButton > 1)
+				selectedButton -= 2; // Bouton au-dessus
 
-    HighlightButton(selectedButton); // Mettre à jour la surbrillance
-    HAL_Delay(200);                  // Anti-rebond
+			lastDebounceTime = currentTime;
+			break;
+		case JOY_DOWN:
+			if (selectedButton < 2)
+				selectedButton += 2; // Bouton en dessous
+
+			lastDebounceTime = currentTime;
+			break;
+		case JOY_LEFT:
+			if (selectedButton % 2 == 1)
+				selectedButton--; // Bouton à gauche
+
+			lastDebounceTime = currentTime;
+			break;
+		case JOY_RIGHT:
+			if (selectedButton % 2 == 0)
+				selectedButton++; // Bouton à droite
+
+			lastDebounceTime = currentTime;
+			break;
+		case JOY_SEL:
+			ResetButtons(); // Appliquer la sélection
+			lastDebounceTime = currentTime;
+			return;         // Pas besoin de surbrillance supplémentaire
+
+
+		default:
+			return;
+		}
+
+		HighlightButton(selectedButton); // Mettre à jour la surbrillance
+		//HAL_Delay(200);                  // Anti-rebond
+	}
+
 }
 
 
