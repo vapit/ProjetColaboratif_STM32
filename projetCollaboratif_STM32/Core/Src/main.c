@@ -45,7 +45,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define SaturaLH(N, L, H) (((N)<(L))?(L):(((N)>(H))?(H):(N)))
+#define SaturaLH(N, L, H) (((N) < (L)) ? (L) : (((N) > (H)) ? (H) : (N)))
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,20 +55,20 @@ extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
 extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter1;
 extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;
 extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
-DMA_HandleTypeDef            hLeftDma;
-DMA_HandleTypeDef            hRightDma;
-I2S_HandleTypeDef            haudio_i2s;
-DMA_HandleTypeDef            hdma_i2s_tx;
-AUDIO_DrvTypeDef             *audio_drv;
-int32_t                      LeftRecBuff[2048];
-int32_t                      RightRecBuff[2048];
-int16_t                      PlayBuff[4096];
-uint32_t                     DmaLeftRecHalfBuffCplt  = 0;
-uint32_t                     DmaLeftRecBuffCplt      = 0;
-uint32_t                     DmaRightRecHalfBuffCplt = 0;
-uint32_t                     DmaRightRecBuffCplt     = 0;
-uint32_t                     PlaybackStarted         = 0;
-uint32_t 				   	i=0;
+DMA_HandleTypeDef hLeftDma;
+DMA_HandleTypeDef hRightDma;
+I2S_HandleTypeDef haudio_i2s;
+DMA_HandleTypeDef hdma_i2s_tx;
+AUDIO_DrvTypeDef *audio_drv;
+int32_t LeftRecBuff[2048];
+int32_t RightRecBuff[2048];
+int16_t PlayBuff[4096];
+uint32_t DmaLeftRecHalfBuffCplt = 0;
+uint32_t DmaLeftRecBuffCplt = 0;
+uint32_t DmaRightRecHalfBuffCplt = 0;
+uint32_t DmaRightRecBuffCplt = 0;
+uint32_t PlaybackStarted = 0;
+uint32_t i = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,14 +83,14 @@ static void Playback_Init(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,7 +105,7 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-/* Configure the peripherals common clocks */
+  /* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
@@ -126,11 +126,11 @@ int main(void)
   Playback_Init();
   BSP_LED_Init(LED3);
   /* Start DFSDM conversions */
-  if(HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, RightRecBuff, 2048))
+  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, RightRecBuff, 2048))
   {
     Error_Handler();
   }
-  if(HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter1, LeftRecBuff, 2048))
+  if (HAL_OK != HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter1, LeftRecBuff, 2048))
   {
     Error_Handler();
   }
@@ -144,79 +144,44 @@ int main(void)
   app_init();
   while (1)
   {
-	  if((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
-	    {
-	      /* Store values on Play buff */
-	      for( i = 0; i < 1024; i++)
-	      {
-	        PlayBuff[2*i]     = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
-	        PlayBuff[(2*i)+1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
-	      }
-	      if(PlaybackStarted == 0)
-	      {
-	        if(0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *) &PlayBuff[0], 4096))
-	        {
-	          Error_Handler();
-	        }
-	        if(HAL_OK != HAL_I2S_Transmit_DMA(&haudio_i2s, (uint16_t *) &PlayBuff[0], 4096))
-	        {
-	          Error_Handler();
-	        }
-	        PlaybackStarted = 1;
-	      }
-	      DmaLeftRecHalfBuffCplt  = 0;
-	      DmaRightRecHalfBuffCplt = 0;
-	    }
-	    if((DmaLeftRecBuffCplt == 1) && (DmaRightRecBuffCplt == 1))
-	    {
-	      /* Store values on Play buff */
-	      for(i = 1024; i < 2048; i++)
-	      {
-	        PlayBuff[2*i]     = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
-	        PlayBuff[(2*i)+1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
-	      }
-	      DmaLeftRecBuffCplt  = 0;
-	      DmaRightRecBuffCplt = 0;
-	    }
-	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  UART_periodic();
-  I2C_periodic();
-  I2S_periodic();
-  app_periodic();
-
-
+    UART_periodic();
+    I2C_periodic();
+    I2S_periodic();
+    app_periodic();
+    storingAudioIntoBuffer();
   }
+}
 
-  /* USER CODE END 3 */
-
+/* USER CODE END 3 */
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  *
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ *
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Macro to configure the PLL multiplication factor
-  */
+   */
   __HAL_RCC_DFSDM1AUDIO_CONFIG(RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1);
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -232,9 +197,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -248,17 +212,16 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief Peripherals Common Clock Configuration
-  * @retval None
-  */
+ * @brief Peripherals Common Clock Configuration
+ * @retval None
+ */
 void PeriphCommonClock_Config(void)
 {
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   /** Initializes the peripherals clock
-  */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_PLLI2S|RCC_PERIPHCLK_I2S_APB1
-                              |RCC_PERIPHCLK_DFSDM1|RCC_PERIPHCLK_DFSDM1_AUDIO;
+   */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_PLLI2S | RCC_PERIPHCLK_I2S_APB1 | RCC_PERIPHCLK_DFSDM1 | RCC_PERIPHCLK_DFSDM1_AUDIO;
   PeriphClkInitStruct.PLLI2S.PLLI2SN = 344;
   PeriphClkInitStruct.PLLI2S.PLLI2SM = 8;
   PeriphClkInitStruct.PLLI2S.PLLI2SR = 7;
@@ -280,10 +243,10 @@ int __io_putchar(int ch)
   return ch;
 }
 
-//new function here
+// new function here
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
-  if(hdfsdm_filter == &hdfsdm1_filter0)
+  if (hdfsdm_filter == &hdfsdm1_filter0)
   {
     DmaLeftRecHalfBuffCplt = 1;
   }
@@ -294,7 +257,7 @@ void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_
 }
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
-  if(hdfsdm_filter == &hdfsdm1_filter1)
+  if (hdfsdm_filter == &hdfsdm1_filter1)
   {
     DmaLeftRecBuffCplt = 1;
   }
@@ -322,20 +285,20 @@ static void Playback_Init(void)
   haudio_i2s.Init.DataFormat = I2S_DATAFORMAT_16B;
   haudio_i2s.Init.MCLKOutput = I2S_MCLKOUTPUT_ENABLE;
   haudio_i2s.Init.Mode = I2S_MODE_MASTER_TX;
-  haudio_i2s.Init.Standard =  I2S_STANDARD_PHILIPS;
+  haudio_i2s.Init.Standard = I2S_STANDARD_PHILIPS;
   haudio_i2s.Init.FullDuplexMode = I2S_FULLDUPLEXMODE_DISABLE;
 
   /* Init the I2S */
   HAL_I2S_Init(&haudio_i2s);
 
- /* Enable I2S block */
+  /* Enable I2S block */
   __HAL_I2S_ENABLE(&haudio_i2s);
 
   /* I2C Init */
-   AUDIO_IO_Init();
+  AUDIO_IO_Init();
 
   /* Initialize audio driver */
-  if(WM8994_ID != wm8994_drv.ReadID(AUDIO_I2C_ADDRESS))
+  if (WM8994_ID != wm8994_drv.ReadID(AUDIO_I2C_ADDRESS))
   {
     Error_Handler();
   }
@@ -343,27 +306,66 @@ static void Playback_Init(void)
   audio_drv = &wm8994_drv;
   audio_drv->Reset(AUDIO_I2C_ADDRESS);
   /* Send fake I2S data in order to generate MCLK needed by WM8994 to set its registers
-  * MCLK is generated only when a data stream is sent on I2S */
+   * MCLK is generated only when a data stream is sent on I2S */
   HAL_I2S_Transmit_DMA(&haudio_i2s, buffer_fake, 16);
 
-  if(0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 90, AUDIO_FREQUENCY_16K))
+  if (0 != audio_drv->Init(AUDIO_I2C_ADDRESS, OUTPUT_DEVICE_HEADPHONE, 90, AUDIO_FREQUENCY_16K))
   {
     Error_Handler();
   }
   /* Stop sending fake I2S data */
   HAL_I2S_DMAStop(&haudio_i2s);
 }
+void storingAudioIntoBuffer(void)
+{
+
+  if ((DmaLeftRecHalfBuffCplt == 1) && (DmaRightRecHalfBuffCplt == 1))
+  {
+    /* Store values on Play buff */
+    for (i = 0; i < 1024; i++)
+    {
+      PlayBuff[2 * i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
+      PlayBuff[(2 * i) + 1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
+    }
+    if (PlaybackStarted == 0)
+    {
+      if (0 != audio_drv->Play(AUDIO_I2C_ADDRESS, (uint16_t *)&PlayBuff[0], 4096))
+      {
+        Error_Handler();
+      }
+      if (HAL_OK != HAL_I2S_Transmit_DMA(&haudio_i2s, (uint16_t *)&PlayBuff[0], 4096))
+      {
+        Error_Handler();
+      }
+      PlaybackStarted = 1;
+    }
+    DmaLeftRecHalfBuffCplt = 0;
+    DmaRightRecHalfBuffCplt = 0;
+  }
+  if ((DmaLeftRecBuffCplt == 1) && (DmaRightRecBuffCplt == 1))
+  {
+    /* Store values on Play buff */
+    for (i = 1024; i < 2048; i++)
+    {
+      PlayBuff[2 * i] = SaturaLH((LeftRecBuff[i] >> 8), -32768, 32767);
+      PlayBuff[(2 * i) + 1] = SaturaLH((RightRecBuff[i] >> 8), -32768, 32767);
+    }
+    DmaLeftRecBuffCplt = 0;
+    DmaRightRecBuffCplt = 0;
+  }
+}
+
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @param  None
+ * @retval None
+ */
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -375,14 +377,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
