@@ -35,12 +35,13 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 typedef struct {
-    uint16_t x;        // Position X
-    uint16_t y;        // Position Y
-    uint16_t width;    // Largeur
-    uint16_t height;   // Hauteur
-    uint32_t color;    // Couleur par défaut
+    uint16_t x;            // Position X
+    uint16_t y;            // Position Y
+    uint16_t width;        // Largeur
+    uint16_t height;       // Hauteur
+    uint32_t color;        // Couleur par défaut
     uint32_t selectedColor; // Couleur en surbrillance
+    const char *label;     // Texte du bouton
 } Button;
 /* USER CODE END PTD */
 
@@ -56,6 +57,7 @@ typedef struct {
 /* USER CODE BEGIN PV */
 Button buttons[4];          // Tableau pour les 4 boutons
 uint8_t selectedButton = 0; // Indice du bouton sélectionné
+uint8_t previousSelectedButton = 0; // Variable pour suivre l'état précédent de la sélection
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,19 +75,29 @@ void HandleJoystick();
  * @brief Initialisation des boutons à l'écran LCD
  */
 void InitializeButtons() {
-    // Définir les positions, dimensions et couleurs des boutons
-    buttons[0] = (Button){40, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED};
-    buttons[1] = (Button){160, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED};
-    buttons[2] = (Button){40, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED};
-    buttons[3] = (Button){160, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED};
+    // Définir les positions, dimensions, couleurs et labels des boutons
+    buttons[0] = (Button){20, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 1"};
+    buttons[1] = (Button){140, 60, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 2"};
+    buttons[2] = (Button){20, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 3"};
+    buttons[3] = (Button){140, 140, 80, 40, LCD_COLOR_BLUE, LCD_COLOR_RED, "Effet 4"};
 
-    // Dessiner les boutons
+    // Dessiner les boutons et afficher leurs labels
     for (uint8_t i = 0; i < 4; i++) {
         BSP_LCD_SetTextColor(buttons[i].color);
         BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
+
+        // Afficher le label centré sur le bouton
+        BSP_LCD_SetTextColor(LCD_COLOR_WHITE); // Couleur du texte
+        BSP_LCD_SetBackColor(buttons[i].color); // Fond du texte
+        BSP_LCD_DisplayStringAt(
+            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+            buttons[i].y + (buttons[i].height / 2) - 8, // Centrer verticalement
+            (uint8_t *)buttons[i].label,
+            LEFT_MODE
+        );
     }
-    // Mettre le premier bouton en surbrillance
-    HighlightButton(0);
+    previousSelectedButton = selectedButton; // Initialiser l'état précédent
+    HighlightButton(0); // Mettre le premier bouton en surbrillance
 }
 
 /**
@@ -93,14 +105,35 @@ void InitializeButtons() {
  * @param index L'indice du bouton à surligner
  */
 void HighlightButton(uint8_t index) {
+    // Si le bouton sélectionné n'a pas changé, ne pas redessiner
+    if (index == previousSelectedButton) {
+        return;
+    }
+
+    // Dessiner les boutons sans leur label
     for (uint8_t i = 0; i < 4; i++) {
         if (i == index) {
-            BSP_LCD_SetTextColor(buttons[i].selectedColor);
+            BSP_LCD_SetTextColor(buttons[i].selectedColor); // Choisir la couleur de surbrillance
         } else {
-            BSP_LCD_SetTextColor(buttons[i].color);
+            BSP_LCD_SetTextColor(buttons[i].color); // Couleur par défaut
         }
         BSP_LCD_FillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
     }
+
+    // Réafficher les labels (en maintenant la couleur du texte)
+    for (uint8_t i = 0; i < 4; i++) {
+        BSP_LCD_SetTextColor(LCD_COLOR_WHITE); // Couleur du texte
+        BSP_LCD_SetBackColor(i == index ? buttons[i].selectedColor : buttons[i].color); // Fond du texte
+        BSP_LCD_DisplayStringAt(
+            buttons[i].x + (buttons[i].width / 2) - (strlen(buttons[i].label) * 4), // Ajuster le texte à la taille
+            buttons[i].y + (buttons[i].height / 2) - 8, // Centrer verticalement
+            (uint8_t *)buttons[i].label,
+            LEFT_MODE
+        );
+    }
+
+    // Mettre à jour l'état précédent
+    previousSelectedButton = index;
 }
 
 /**
@@ -129,7 +162,8 @@ void HandleJoystick() {
         default:
             break;
     }
-    HighlightButton(selectedButton);
+
+    HighlightButton(selectedButton); // Mettre à jour la surbrillance si nécessaire
     HAL_Delay(200); // Anti-rebond
 }
 
@@ -223,3 +257,4 @@ void Error_Handler(void) {
     }
 }
 /* USER CODE END Error_Handler */
+
