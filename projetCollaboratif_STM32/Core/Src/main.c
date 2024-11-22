@@ -214,8 +214,8 @@ void HandleJoystick()
       selectedButton++; // Bouton à droite
     break;
   case JOY_SEL:
-    // Changer la couleur du bouton sélectionné
-    buttons[selectedButton].color = LCD_COLOR_GREEN;
+    // Changer la couleur du bouton sélectionné et désactiver les autres
+    ResetButtons();
     break;
   default:
     break;
